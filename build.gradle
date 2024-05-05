@@ -1,0 +1,88 @@
+import groovy.json.JsonSlurper
+
+buildscript {
+    apply from: 'https://moddingx.github.io/ModUtils/v5/buildscript.gradle', to: buildscript
+}
+
+apply from: 'https://moddingx.github.io/ModUtils/v5/mod.gradle'
+apply plugin: 'org.moddingx.modgradle.cursedep'
+if (mod.coremods) {
+    apply plugin: 'org.moddingx.modgradle.coremods'
+}
+
+repositories {
+    maven {
+        name = "Mirror for many mods"
+        url = "https://modmaven.dev/"
+    }
+    maven {
+        name = "ModdingX"
+        url = 'https://maven.moddingx.org/'
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        forRepositories(fg.repository)
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
+}
+
+def getVersionFor(String modid) {
+    def url = new URL('https://raw.githubusercontent.com/MelanX/ExtendedModUtils/HEAD/mod_versions.json')
+    def json = new JsonSlurper().parse(url)
+
+
+    def modVersion = json[modid][mod.minecraft]
+    if (modVersion) {
+        return modVersion
+    }
+
+    println "No valid version for $modid in ${mod.minecraft}"
+    return null
+}
+
+dependencies {
+    if ('libx' in mod) {
+        def libx = mod.libx
+        if (libx == 'true') {
+            libx = getVersionFor('libx')
+        }
+
+        if (libx != null) {
+            annotationProcessor fg.deobf("org.moddingx:LibX:${libx}")
+            implementation fg.deobf("org.moddingx:LibX:${libx}")
+        }
+    }
+
+    if ('jei' in mod) {
+        def jei = mod.jei
+        if (jei == 'true') {
+            jei = getVersionFor('jei')
+        }
+
+        if (jei != null) {
+            implementation fg.deobf("mezz.jei:jei-${mod.minecraft}-forge:${jei}")
+        }
+    }
+
+    if ('jade' in mod) {
+        def jade = mod.jade
+        if (jade == 'true') {
+            jade = getVersionFor('jade')
+        }
+
+        if (jade != null) {
+            implementation fg.deobf("maven.modrinth:jade:${jade}")
+        }
+    }
+
+    if (mod.coremods) {
+        coremods 'org.moddingx:CoreModTypes:5.0.2-2'
+    }
+}

@@ -1,0 +1,48 @@
+name: 'Deploy'
+on:
+  push:
+    paths-ignore:
+      - 'mod_versions.json'
+
+jobs:
+  deploy:
+    if: startsWith(github.repository, 'MelanX/') # don't run this in forks
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout Base Branch'
+        uses: actions/checkout@v4
+        with:
+          path: base
+
+      - name: 'Checkout Deploy Branch'
+        uses: actions/checkout@v4
+        with:
+          ref: 'gh-pages'
+          path: deploy
+
+      - name: 'Copy Files'
+        shell: bash
+        run: |
+          BRANCH=$(echo ${GITHUB_REF#refs/heads/})
+          if [[ "${BRANCH}" != "" && "${BRANCH}" != *"/"* ]]; then
+            rm -rf "deploy/${BRANCH}"
+            mkdir -p "deploy/${BRANCH}"
+            cd base
+            mkdir output
+            cp -r default_workflows output/
+            cp build.gradle output/mod.gradle
+            bash build.sh "${BRANCH}" "$(git rev-parse --short "$GITHUB_SHA")"
+            if [[ "$?" != "0" ]]; then
+              exit 1
+            fi
+            cp "output/"* "../deploy/${BRANCH}/"
+          fi
+
+      - name: 'Push'
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_user_name: github-actions[bot]
+          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
+          commit_message: Deploy
+          repository: deploy
+          branch: 'gh-pages'
