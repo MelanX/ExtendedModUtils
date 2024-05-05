@@ -8,6 +8,10 @@ jobs:
   deploy:
     if: startsWith(github.repository, 'MelanX/') # don't run this in forks
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
     steps:
       - name: 'Checkout Base Branch'
         uses: actions/checkout@v4
@@ -29,13 +33,9 @@ jobs:
             mkdir -p "deploy/${BRANCH}"
             cd base
             mkdir output
-            cp -r default_workflows output/
+            cp -r default_workflows output
             cp build.gradle output/mod.gradle
-            bash build.sh "${BRANCH}" "$(git rev-parse --short "$GITHUB_SHA")"
-            if [[ "$?" != "0" ]]; then
-              exit 1
-            fi
-            cp "output/"* "../deploy/${BRANCH}/"
+            cp -r "output/"* "../deploy/${BRANCH}/"
           fi
 
       - name: 'Push'
