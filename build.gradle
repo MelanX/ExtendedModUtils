@@ -6,7 +6,7 @@ buildscript {
 
 apply from: 'https://moddingx.github.io/ModUtils/v5/mod.gradle'
 apply plugin: 'org.moddingx.modgradle.cursedep'
-if (mod.coremods) {
+if ('coremods' in mod) {
     apply plugin: 'org.moddingx.modgradle.coremods'
 }
 
@@ -82,7 +82,7 @@ dependencies {
         }
     }
 
-    if (mod.coremods) {
+    if ('coremods' in mod) {
         coremods 'org.moddingx:CoreModTypes:5.0.2-2'
     }
 }
